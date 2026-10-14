@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Buddy - Student Tech Chatbot</title>
+  <style>
+    /* ==========================================================================
+       CSS STYLING: Modern, Responsive Chatbot UI
+       ========================================================================== */
+
+    /* CSS Variables for easy color theming */
+    :root {
+      --primary-color: #4f46e5;       /* Indigo */
+      --primary-hover: #4338ca;
+      --primary-light: #e0e7ff;
+      --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --chat-bg: #ffffff;
+      --bubble-bot: #f3f4f6;
+      --bubble-user: #4f46e5;
+      --text-dark: #1f2937;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      color: var(--text-dark);
+    }
+
+    /* Main Chat Container */
+    .chat-container {
+      width: 100%;
+      max-width: 520px;
+      height: 92vh;
+      max-height: 750px;
+      background: var(--chat-bg);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Header Section */
+    .chat-header {
+      background: #ffffff;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .bot-avatar {
+      width: 44px;
+      height: 44px;
+      background: var(--primary-light);
+      color: var(--primary-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .header-info h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 2px;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: #10b981; /* Green status */
+      font-weight: 500;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #10b981;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    .header-badge {
+      font-size: 0.75rem;
+      background: #f3f4f6;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    /* Chat Messages Display Area */
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: #fafafa;
+      scroll-behavior: smooth;
+    }
+
+    /* Message Wrapper & Bubbles */
+    .message-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      max-width: 88%;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-row.bot {
+      align-self: flex-start;
+    }
+
+    .message-row.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .avatar-small {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .bot .avatar-small {
+      background: var(--primary-light);
+      color: var(--primary-color);
+    }
+
+    .user .avatar-small {
+      background: #4f46e5;
+      color: #ffffff;
+    }
+
+    .message-bubble {
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      position: relative;
+      word-break: break-word;
+    }
+
+    .message-row.bot .message-bubble {
+      background: #ffffff;
+      color: var(--text-dark);
+      border: 1px solid var(--border-color);
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .message-row.user .message-bubble {
+      background: var(--bubble-user);
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+    }
+
+    .message-time {
+      font-size: 0.7rem;
+      margin-top: 4px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .message-row.user .message-time {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Clickable Quick Suggestion Chips */
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .chip-btn {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .chip-btn:hover {
+      background: #dcfce7;
+      transform: translateY(-1px);
+    }
+
+    /* Typing Animation Indicator */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 14px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      width: fit-content;
+      margin-bottom: 8px;
+    }
+
+    .typing-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      animation: typingBounce 1.2s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    /* Input & Action Area */
+    .chat-input-area {
+      padding: 14px 16px;
+      background: #ffffff;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      font-size: 0.95rem;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      background: #f9fafb;
+    }
+
+    .chat-input:focus {
+      background: #ffffff;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    .send-btn {
+      background: var(--primary-color);
+      color: #ffffff;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease, transform 0.1s ease;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover {
+      background: var(--primary-hover);
+      transform: scale(1.05);
+    }
+
+    .send-btn:active {
+      transform: scale(0.95);
+    }
+
+    .send-icon {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    /* Helpful hint footer */
+    .input-hint {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      padding-bottom: 6px;
+      background: #ffffff;
+    }
+
+    /* ==========================================================================
+       RESPONSIVE DESIGN (Mobiles & Tablets)
+       ========================================================================== */
+    @media (max-width: 600px) {
+      body {
+        padding: 0;
+      }
+      .chat-container {
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+      }
+      .message-row {
+        max-width: 92%;
+      }
+      .chat-header {
+        padding: 12px 16px;
+      }
+      .chat-messages {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Main Chatbot Container -->
+  <main class="chat-container">
+
+    <!-- 1. Header with Bot Title & Online Status -->
+    <header class="chat-header">
+      <div class="header-left">
+        <div class="bot-avatar">🎓</div>
+        <div class="header-info">
+          <h1>Campus Buddy</h1>
+          <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span>Online • College Tech Guide</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-badge">Year 1 Edition</div>
+    </header>
+
+    <!-- 2. Chat Area: Displays all incoming & outgoing messages -->
+    <section class="chat-messages" id="chatMessages" aria-label="Chat history">
+      <!-- Initial Welcome Message from Campus Buddy -->
+      <div class="message-row bot">
+        <div class="avatar-small">🎓</div>
+        <div class="message-content">
+          <div class="message-bubble">
+            👋 <strong>Hi there! I'm Campus Buddy.</strong><br>
+            I'm here to help you get ahead in your first year of college coding and tech!<br><br>
+            Feel free to ask me about:
+            <div class="quick-chips">
+              <button class="chip-btn" onclick="sendQuickMessage('Tell me about Hackathons')">🏆 Hackathons</button>
+              <button class="chip-btn" onclick="sendQuickMessage('What is GitHub?')">🐙 GitHub</button>
+              <button class="chip-btn" onclick="sendQuickMessage('What is HTML?')">🌐 HTML</button>
+              <button class="chip-btn" onclick="sendQuickMessage('What is CSS?')">🎨 CSS</button>
+              <button class="chip-btn" onclick="sendQuickMessage('What is JavaScript?')">⚡ JavaScript</button>
+              <button class="chip-btn" onclick="sendQuickMessage('Give me college project ideas')">💡 College Projects</button>
+            </div>
+            <div class="message-time" id="initialTime">Just now</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Text Input & Send Button Section -->
+    <footer class="chat-input-area">
+      <input 
+        type="text" 
+        id="userInput" 
+        class="chat-input" 
+        placeholder="Ask about HTML, GitHub, Hackathons, Projects..." 
+        autocomplete="off"
+        aria-label="Type your message"
+      />
+      <button id="sendBtn" class="send-btn" title="Send Message" aria-label="Send">
+        <!-- Clean SVG Send Arrow Icon -->
+        <svg class="send-icon" viewBox="0 0 24 24">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+    </footer>
+    <div class="input-hint">Tip: Press <strong>Enter</strong> or click <strong>Send</strong> to chat</div>
+  </main>
+
+  <!-- ==========================================================================
+       JAVASCRIPT: Logic, Keyword Matching & Interactive Chat
+       ========================================================================== -->
+  <script>
+    /* -------------------------------------------------------------------------
+       1. DATA: Chatbot Knowledge Base
+       Contains keywords and answers for:
+       - Hackathons
+       - GitHub
+       - HTML
+       - CSS
+       - JavaScript
+       - College Projects
+       - Greetings & Help
+       ------------------------------------------------------------------------- */
+    const knowledgeBase = [
+      // Hackathons
+      {
+        topic: "hackathons",
+        keywords: ["hackathon", "hackathons", "hack", "hackday", "codathon", "devpost"],
+        response: `🏆 <strong>Hackathons for Beginners:</strong><br><br>
+        A <strong>hackathon</strong> is an invention marathon (usually 24–48 hours) where students team up to build an innovative project from scratch!<br><br>
+        💡 <strong>Key Tips for First-Years:</strong><br>
+        • <em>You don't need to be a coding genius!</em> Beginners are very welcome.<br>
+        • You get free mentorship, workshops, food, and cool tech swag.<br>
+        • It's the fastest way to build real projects for your resume.<br>
+        • Check platforms like <strong>Devpost</strong>, <strong>Unstop</strong>, and <strong>MLH (Major League Hacking)</strong> for upcoming events.`
+      },
+
+      // GitHub
+      {
+        topic: "github",
+        keywords: ["github", "git", "repo", "repository", "commit", "push", "pull", "version control"],
+        response: `🐙 <strong>Git & GitHub Basics:</strong><br><br>
+        • <strong>Git</strong> is a version control tool running on your computer that saves snapshots of your code over time.<br>
+        • <strong>GitHub</strong> is a cloud platform where you host and showcase your Git repositories online.<br><br>
+        🚀 <strong>Why every student needs it:</strong><br>
+        1. It acts as your <em>software developer resume</em> for internships.<br>
+        2. It prevents losing your work when working on college projects.<br>
+        3. Essential commands: <code>git init</code>, <code>git add .</code>, <code>git commit -m "update"</code>, and <code>git push</code>.`
+      },
+
+      // HTML
+      {
+        topic: "html",
+        keywords: ["html", "html5", "markup", "tags", "elements", "doctype"],
+        response: `🌐 <strong>HTML (HyperText Markup Language):</strong><br><br>
+        HTML is the skeleton and structural foundation of every website on the internet!<br><br>
+        🧱 <strong>Core Concepts:</strong><br>
+        • Uses tags like <code>&lt;h1&gt;</code> for headings, <code>&lt;p&gt;</code> for text, <code>&lt;a&gt;</code> for hyperlinks, and <code>&lt;div&gt;</code> as containers.<br>
+        • Combined with CSS (styles) and JavaScript (behavior) to create full web applications.<br>
+        • <em>Beginner tip:</em> Always start by organizing clean semantic tags (like <code>&lt;header&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;footer&gt;</code>)!`
+      },
+
+      // CSS
+      {
+        topic: "css",
+        keywords: ["css", "css3", "style", "styling", "flexbox", "grid", "color", "responsive"],
+        response: `🎨 <strong>CSS (Cascading Style Sheets):</strong><br><br>
+        CSS gives your HTML website its style, colors, fonts, spacing, and animations!<br><br>
+        ✨ <strong>What to master first:</strong><br>
+        • <strong>Box Model:</strong> Margin, Border, Padding, and Content.<br>
+        • <strong>Flexbox:</strong> Perfect for easily centering items and building modern navigation bars.<br>
+        • <strong>Media Queries (<code>@media</code>):</strong> Makes your website look great on both mobile phones and laptops.`
+      },
+
+      // JavaScript
+      {
+        topic: "javascript",
+        keywords: ["javascript", "js", "script", "dom", "variables", "functions", "events"],
+        response: `⚡ <strong>JavaScript (JS):</strong><br><br>
+        JavaScript is the programming language that makes websites interactive and alive (just like this chatbot)!<br><br>
+        🧠 <strong>Starter Checklist:</strong><br>
+        • <strong>Variables:</strong> Use <code>let</code> and <code>const</code> to store data.<br>
+        • <strong>Functions:</strong> Reusable blocks of code that perform actions.<br>
+        • <strong>DOM Manipulation:</strong> Connecting JS to HTML using <code>document.getElementById()</code> or <code>querySelector()</code>.<br>
+        • <strong>Event Listeners:</strong> Handling user clicks, keypresses, and form submissions.`
+      },
+
+      // College Projects
+      {
+        topic: "projects",
+        keywords: ["project", "projects", "mini project", "ideas", "college project", "portfolio"],
+        response: `💡 <strong>Great 1st-Year College Project Ideas:</strong><br><br>
+        1. <strong>Personal Developer Portfolio:</strong> Showcase your bio, skills, and links.<br>
+        2. <strong>To-Do List or Habit Tracker:</strong> Practice creating, editing, and deleting items in JS.<br>
+        3. <strong>Interactive Quiz App:</strong> Test users on coding trivia with a score counter.<br>
+        4. <strong>Student Budget / Expense Calculator:</strong> Great for practicing math and input validation.<br>
+        5. <strong>Campus Event Board / Club Directory:</strong> A searchable list of campus clubs.<br><br>
+        <em>Advice:</em> Start simple, push your code to GitHub, and write a friendly README!`
+      },
+
+      // Greetings
+      {
+        topic: "greetings",
+        keywords: ["hi", "hello", "hey", "hola", "greetings", "good morning", "good afternoon", "sup"],
+        response: `👋 Hello there! Great to see you. How is your college journey going? Ask me anything about <strong>Hackathons</strong>, <strong>GitHub</strong>, <strong>HTML</strong>, <strong>CSS</strong>, <strong>JavaScript</strong>, or <strong>Projects</strong>!`
+      },
+
+      // Help / FAQ
+      {
+        topic: "help",
+        keywords: ["help", "what can you do", "topics", "options", "commands", "menu"],
+        response: `🛠️ <strong>Here is what I can help you with:</strong><br><br>
+        • <strong>Hackathons:</strong> What they are & how beginners can participate.<br>
+        • <strong>GitHub:</strong> Version control basics and essential commands.<br>
+        • <strong>HTML & CSS:</strong> Building and designing web pages.<br>
+        • <strong>JavaScript:</strong> Making web pages interactive.<br>
+        • <strong>College Projects:</strong> Beginner-friendly project recommendations.<br><br>
+        Just type any question or keyword related to these topics!`
+      },
+
+      // Gratitude / Polite
+      {
+        topic: "thanks",
+        keywords: ["thanks", "thank you", "thx", "awesome", "great", "cool", "helpful"],
+        response: `🎉 You're very welcome! Keep coding and experimenting. Every great developer started right where you are today. Let me know if you need anything else!`
+      }
+    ];
+
+    /* -------------------------------------------------------------------------
+       2. DOM ELEMENTS SELECTION
+       Grab references to HTML elements so JavaScript can interact with them.
+       ------------------------------------------------------------------------- */
+    const chatMessages = document.getElementById("chatMessages");
+    const userInput = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const initialTime = document.getElementById("initialTime");
+
+    // Display formatted current time on initial welcome message
+    if (initialTime) {
+      initialTime.textContent = getCurrentTime();
+    }
+
+    /* -------------------------------------------------------------------------
+       3. HELPER FUNCTIONS
+       ------------------------------------------------------------------------- */
+
+    /**
+     * Formats current time into a clean string (e.g., "10:30 AM")
+     */
+    function getCurrentTime() {
+      const now = new Date();
+      return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    /**
+     * Automatically scrolls the chat box to the very bottom so new messages are seen
+     */
+    function scrollToBottom() {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    /**
+     * Appends a new message bubble (User or Bot) to the chat area
+     * @param {string} sender - 'user' or 'bot'
+     * @param {string} text - The message content (can include HTML formatting)
+     */
+    function appendMessage(sender, text) {
+      // Create main message row container
+      const row = document.createElement("div");
+      row.className = `message-row ${sender}`;
+
+      // Set avatar icon based on sender
+      const avatar = document.createElement("div");
+      avatar.className = "avatar-small";
+      avatar.innerHTML = sender === "user" ? "👤" : "🎓";
+
+      // Create content wrapper
+      const content = document.createElement("div");
+      content.className = "message-content";
+
+      // Create message bubble
+      const bubble = document.createElement("div");
+      bubble.className = "message-bubble";
+      bubble.innerHTML = text;
+
+      // Add time stamp
+      const timeSpan = document.createElement("div");
+      timeSpan.className = "message-time";
+      timeSpan.textContent = getCurrentTime();
+      bubble.appendChild(timeSpan);
+
+      content.appendChild(bubble);
+
+      // Bot has avatar on left, User on right
+      row.appendChild(avatar);
+      row.appendChild(content);
+
+      chatMessages.appendChild(row);
+      scrollToBottom();
+    }
+
+    /**
+     * Shows a three-dot animated typing indicator while the bot prepares a reply
+     */
+    function showTypingIndicator() {
+      const typingRow = document.createElement("div");
+      typingRow.className = "message-row bot";
+      typingRow.id = "typingIndicator";
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar-small";
+      avatar.innerHTML = "🎓";
+
+      const indicator = document.createElement("div");
+      indicator.className = "typing-indicator";
+      indicator.innerHTML = `
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      `;
+
+      typingRow.appendChild(avatar);
+      typingRow.appendChild(indicator);
+      chatMessages.appendChild(typingRow);
+      scrollToBottom();
+    }
+
+    /**
+     * Removes the typing indicator once the bot is ready to send the response
+     */
+    function removeTypingIndicator() {
+      const indicator = document.getElementById("typingIndicator");
+      if (indicator) {
+        indicator.remove();
+      }
+    }
+
+    /* -------------------------------------------------------------------------
+       4. CORE CHATBOT LOGIC: Keyword Matching & Response Generator
+       ------------------------------------------------------------------------- */
+
+    /**
+     * Finds the most relevant response based on keywords in user input.
+     * If no keyword is found, returns a friendly default fallback response.
+     * @param {string} userText - The raw message entered by the student
+     * @returns {string} - Chatbot answer
+     */
+    function getBotResponse(userText) {
+      // Convert user input to lowercase and remove leading/trailing spaces for reliable matching
+      const cleanedInput = userText.toLowerCase().trim();
+
+      // Search through our knowledgeBase for matching keywords
+      for (const item of knowledgeBase) {
+        const hasMatch = item.keywords.some(keyword => cleanedInput.includes(keyword));
+        if (hasMatch) {
+          return item.response;
+        }
+      }
+
+      // Friendly default response when question is unknown
+      return `🤔 <strong>Hmm, I'm not sure about that one yet!</strong><br><br>
+      As your first-year Campus Buddy, I can give you clear advice on:<br>
+      • <strong>Hackathons</strong> (tips for beginners)<br>
+      • <strong>GitHub & Git</strong> (repositories, commands)<br>
+      • <strong>HTML</strong> (webpage structure & tags)<br>
+      • <strong>CSS</strong> (styling, flexbox, colors)<br>
+      • <strong>JavaScript</strong> (code basics & DOM interactivity)<br>
+      • <strong>College Projects</strong> (beginner project ideas)<br><br>
+      <em>Try asking about any of the topics above! 😊</em>`;
+    }
+
+    /* -------------------------------------------------------------------------
+       5. SEND MESSAGE HANDLER
+       Processes user message, renders it, and triggers bot response with delay
+       ------------------------------------------------------------------------- */
+    function handleUserSend() {
+      const message = userInput.value.trim();
+
+      // Don't send empty messages
+      if (!message) return;
+
+      // 1. Display user's message in the chat
+      appendMessage("user", escapeHTML(message));
+
+      // 2. Clear the input field and keep it focused
+      userInput.value = "";
+      userInput.focus();
+
+      // 3. Show typing indicator to simulate realistic thinking
+      showTypingIndicator();
+
+      // 4. Simulate small delay (500ms) for natural feel, then show bot response
+      setTimeout(() => {
+        removeTypingIndicator();
+        const botReply = getBotResponse(message);
+        appendMessage("bot", botReply);
+      }, 500);
+    }
+
+    /**
+     * Helper to safely escape user text so HTML characters won't break the layout
+     */
+    function escapeHTML(str) {
+      const p = document.createElement("p");
+      p.appendChild(document.createTextNode(str));
+      return p.innerHTML;
+    }
+
+    /**
+     * Function for the quick-suggestion buttons/chips
+     */
+    function sendQuickMessage(text) {
+      userInput.value = text;
+      handleUserSend();
+    }
+
+    /* -------------------------------------------------------------------------
+       6. EVENT LISTENERS
+       Listens for:
+       - Send button clicks
+       - Enter key presses
+       ------------------------------------------------------------------------- */
+
+    // Listen for click on the Send button
+    sendBtn.addEventListener("click", handleUserSend);
+
+    // Requirement #7: Press Enter key should send the message
+    userInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault(); // Prevents default form submission/line break
+        handleUserSend();
+      }
+    });
+  </script>
+</body>
+</html>
